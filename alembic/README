@@ -1,1 +1,13 @@
-Generic single-database configuration.
+# MIMS: Medical Information Management System
+
+A secure, multi-stage Dockerized SaaS for healthcare management, built with **Python 3.12**, **FastAPI**, and **PostgreSQL**.
+
+## ⚖️ Regulatory Compliance
+- **NDPA 2023:** Implements non-privileged user access and data isolation.
+- **Evidence Act §84:** Maintains immutable audit trails via SQLAlchemy and Alembic.
+- **Finance Act 2025:** Automated tax calculation and invoicing via **Flutterwave**.
+
+## 🚀 Deployment
+1. Ensure Docker is running.
+2. `docker-compose up --build -d`
+3. Run migrations: `alembic upgrade head`
