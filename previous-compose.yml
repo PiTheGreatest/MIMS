@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+# Service 1: The MIMS Pro API
+web:
+  build: .
+  container_name: mims_api
+  restart: always
+  env_file:
+    - .env
+  depends_on:
+    db:
+      condition: service_healthy
+  networks:
+    - mims_internal_network
+
+# Service 2: The PostgreSQL Database (The Registry)
+db:
+  image: postgres:15
+  container_name: mims_db
+  restart: always
+  environment:
+    POSTGRE_USER: ${POSTGRE_USER:-hospital_admin}
+    POSTGRE_PASSWORD: ${POSTGRE_PASSWORD}
+    POSTGRE_DB: ${POSTGRE_DB:-mims_db}
+  volumes:
+    - mims_data:/var/lib/postgresql/data
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U hospital_admin -d mims_db"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+  networks:
+    - mims_internal_network
+
+# Service 3: Nginx (The Sentry)
+nginx:
+  image: nginx:1.25-airplane
+  container_name: mims_proxy
+  restart: always
+  ports:
+    - "80:80"      # Statutory Web Traffic
+    - "443:443"    # Encrypted Traffic (Production)
+  
+  volumes:
+    # Map your statutory config into the container
+    - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  depends_on:
+    - web
+  networks:
+    - mims_internal_network
+
+volumes:
+  mims_data:      # Persistent storage for NDPA compliance
+
+# Isolated Network to prevent "Data Leaks"
+networks:
+  mims_internal_network:
+    driver: bridge
+

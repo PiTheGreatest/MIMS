@@ -1,0 +1,20 @@
+mims_project/
+├── .env                # Secret keys (Flutterwave, Database, NTA Hash)
+├── .gitignore          # Prevents sensitive leaks to GitHub
+├── requirements.txt    # Your technical "Statutory Registry" (pydantic-settings, etc.)
+├── main.py             # The Constitution (Connects everything)
+└── app/
+    ├── __init__.py     # Makes 'app' a package
+    ├── database.py     # Database engine & SessionLocal
+    ├── models.py       # The Statutes (SQLAlchemy tables)
+    ├── schemas.py      # The Filing Forms (Pydantic validation)
+    ├── routers/        # Jurisdictional Departments
+    │   ├── __init__.py
+    │   ├── hospitals.py
+    │   ├── patients.py
+    │   ├── records.py
+    │   └── webhooks.py  # The Flutterwave/NRS Handshake logic
+    └── utils/          # The Forensic Tools
+        ├── __init__.py
+        ├── fiscal.py    # NTA 2025 IRN & CSID generation
+        └── qr_generator.py # NRS-compliant QR code logic

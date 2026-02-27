@@ -1,0 +1,25 @@
+# --- Core Framework & Server ---
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-dotenv
+
+# --- Database & Persistence ---
+sqlalchemy>=2.0.0
+psycopg2-binary
+
+# --- Security & Authentication (NDPA 2023 Compliant) ---
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]  # Added [bcrypt] to handle password hashing legally
+
+# --- Data Validation (The "email-validator" Fix) ---
+pydantic[email]>=2.0.0
+email-validator>=2.0.0
+
+# --- Communication & Testing (Flutterwave & Audits) ---
+requests
+httpx  # Required for FastAPI's TestClient and modern async webhooks
+pytest
+pydantic-settings>=2.1.0
+qrcode[pil]==8.0.0
+alembic>=1.15.0

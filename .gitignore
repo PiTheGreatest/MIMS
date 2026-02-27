@@ -1,0 +1,63 @@
+# --- OS Metadata ---
+.DS_Store
+Thumbs.db
+*.swp
+
+# --- Python & FastAPI Specific ---
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Database & Local Storage ---
+# We ignore local SQLite DBs to avoid leaking patient data
+*.sqlite3
+*.db
+*.db-journal
+
+# --- Secrets & Credentials ---
+# CRITICAL: Ignore your Flutterwave and Database keys
+.env
+.flaskenv
+secrets.json
+*.pem
+*.key
+
+# --- IDEs & Editors ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- Distribution / Packaging ---
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
