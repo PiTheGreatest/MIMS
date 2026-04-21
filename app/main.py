@@ -1,18 +1,22 @@
 import os
 import logging
 from datetime import datetime, timezone
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 # --- 1. Modular Imports ---
+# --- 1. Modular Imports ---
 from app import models
 from app.database import engine, get_db
-# ⚖️ Added 'webhooks' to our jurisdictional delegation
-from app.routers import records, hospitals, patients, webhooks, auth
 
+# ⚖️ IMPORT DIRECTLY FROM THE ROUTERS SUBMODULES
+from app.routers import records, hospitals, patients, webhooks, auth, admin
+
+# ⚖️ IMPORT DIRECTLY FROM THE AI ENGINE FILE
+from app.ai.engine import MIMSAiAssistant
 
 load_dotenv()
 
@@ -45,12 +49,9 @@ def on_startup():
     models.Base.metadata.create_all(bind=engine)
     logger.info("MIMS: Database Registry Enacted and Verified under NTA 2025 Standards.")
 
-# --- 5. CONNECTING THE ROUTERS (Jurisdictional Delegation) ---
-app.include_router(hospitals.router, prefix="/hospitals", tags=["Corporate Governance"])
-app.include_router(patients.router, prefix="/patients", tags=["Data Subjects (NDPA)"])
-app.include_router(records.router, prefix="/records", tags=["Clinical-Fiscal Nexus"])
-# 💳 Flutterwave & NRS Webhook Integration
-app.include_router(webhooks.router, prefix="/webhooks", tags=["Fiscal Webhooks"])
+# --- 5. AI ASSISTANT INITIALIZATION ---
+# Using environment variable for security
+ai_assistant = MIMSAiAssistant(api_key=os.getenv("OPENAI_API_KEY"))
 
 # --- 6. SYSTEM INTEGRITY & HEALTH ---
 @app.get("/", status_code=200, tags=["Compliance"])
@@ -71,7 +72,44 @@ def system_health(db: Session = Depends(get_db)):
         logger.critical(f"SYSTEM_FAILURE: Database Registry Offline. Legal Risk: High. Detail: {e}")
         raise HTTPException(status_code=503, detail="Statutory Registry Offline")
 
-# --- 7. GLOBAL EXCEPTION HANDLER (Forensic Capture) ---
+# --- 7. AI ENDPOINTS ---
+
+@app.post("/ai/search", tags=["AI Engine"])
+async def public_search(query: str = Body(..., embed=True)):
+    """🌐 Public Search Mode: The Gemini/ChatGPT experience for users."""
+    try:
+        response = await ai_assistant.generate_public_search_response(query)
+        return {"response": response}
+    except Exception as e:
+        logger.error(f"AI_SEARCH_ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail="Search service temporarily unavailable")
+
+@app.post("/ai/consult", tags=["AI Engine"])
+async def clinical_consult(
+    role: str, 
+    query: str, 
+    patient_id: int, 
+    context: str = "General Consultation",
+    db: Session = Depends(get_db)
+):
+    """🩺 Clinical Assistant Mode: Internal RAG logic using patient history."""
+    try:
+        response = await ai_assistant.generate_clinical_response(role, query, context)
+        logger.info(f"AI_CONSULTATION_LOG: Patient {patient_id} | Role {role}")
+        return {"response": response}
+    except Exception as e:
+        logger.error(f"AI_CONSULT_ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail="Clinical AI service error")
+
+# --- 8. CONNECTING THE ROUTERS ---
+app.include_router(auth.router, prefix="/auth", tags=["Identity Management"])
+app.include_router(hospitals.router, prefix="/hospitals", tags=["Corporate Governance"])
+app.include_router(patients.router, prefix="/patients", tags=["Data Subjects (NDPA)"])
+app.include_router(records.router, prefix="/records", tags=["Clinical-Fiscal Nexus"])
+app.include_router(webhooks.router, prefix="/webhooks", tags=["Fiscal Webhooks"])
+app.include_router(admin.router, prefix="/admin", tags=["Compliance & Audit"])
+
+# --- 9. GLOBAL EXCEPTION HANDLER ---
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     logger.error(f"SYSTEM_ERROR at {request.url}: {str(exc)}")
@@ -80,5 +118,3 @@ async def global_exception_handler(request, exc):
         "detail": "Action captured in Forensic Audit Log for Statutory Review.",
         "timestamp": datetime.now(timezone.utc)
     }
-
-app.include_router(auth.router, prefix="/api/v1")

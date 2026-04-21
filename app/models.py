@@ -8,6 +8,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
+from pgvector.sqlalchemy import Vector # Critical for the AI Cortex
+
 
 class Base(DeclarativeBase):
     pass
@@ -65,10 +67,15 @@ class Patient(Base):
     data_processing_consent: Mapped[bool] = mapped_column(Boolean, default=False)
     consent_timestamp: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
     
-    # 🏛️ NHIA Act 2022: Social Security & Vulnerability Flags
+    # 🏛️ NHIA Act 2022: Statutory Vulnerability & Indigent Consensus
     nhia_id: Mapped[Optional[str]] = mapped_column(String(50))    
     is_pregnant: Mapped[bool] = mapped_column(Boolean, default=False)
     is_indigent: Mapped[bool] = mapped_column(Boolean, default=False)
+    nsr_id: Mapped[Optional[str]] = mapped_column(String(50), unique=True) # National Social Register ID
+    
+    # 🏢 Private Insurance (The 'Mansard' Bridge)
+    hmo_id: Mapped[Optional[str]] = mapped_column(String(50), index=True) 
+    hmo_provider_name: Mapped[Optional[str]] = mapped_column(String(100)) # e.g., 'AXA Mansard'
 
     meta_data: Mapped[dict] = mapped_column(JSON, default={})
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now())
@@ -99,8 +106,6 @@ class Doctor(Base):
     records: Mapped[List["MedicalRecord"]] = relationship(back_populates="doctor")
     audit_logs: Mapped[List["AuditLog"]] = relationship(back_populates="actor")
 
-# ... (Keep your imports and Base class)
-
 class MedicalRecord(Base):
     """The Clinical-Fiscal Nexus: Linking Diagnosis to Flutterwave Payments."""
     __tablename__ = "medical_records"
@@ -116,8 +121,8 @@ class MedicalRecord(Base):
 
     # 💰 Fiscal Data: Finance Act 2025 & Flutterwave Integration
     base_fee: Mapped[float] = mapped_column(Float, default=0.0)
-    patient_portion: Mapped[float] = mapped_column(Float, default=0.0) # Added for NHIA tracking
-    insurance_portion: Mapped[float] = mapped_column(Float, default=0.0) # Added for NHIA tracking
+    patient_portion: Mapped[float] = mapped_column(Float, default=0.0) 
+    insurance_portion: Mapped[float] = mapped_column(Float, default=0.0) 
     
     flutterwave_ref: Mapped[Optional[str]] = mapped_column(String(100), unique=True)
     is_paid: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -125,8 +130,10 @@ class MedicalRecord(Base):
     # 🏛️ Statutory Fiscal Stamp (NRS/FIRS E-Invoicing)
     fiscal_stamp: Mapped[Optional[str]] = mapped_column(String(100), unique=True)
 
+    # Relationships
     patient: Mapped["Patient"] = relationship(back_populates="medical_records")
     doctor: Mapped["Doctor"] = relationship(back_populates="records")
+    ledger_entries: Mapped[List["ClinicalLedger"]] = relationship(back_populates="medical_record")
 
     # ⚖️ Integrity Guardrail: Enforcing the 'Rule of Payment'
     __table_args__ = (
@@ -134,8 +141,29 @@ class MedicalRecord(Base):
             "(is_paid = False) OR (is_paid = True AND (flutterwave_ref IS NOT NULL OR insurance_portion > 0))",
             name="check_payment_or_subsidy_on_paid"
         ),
-        Index("idx_nin_timestamp", "patient_nin", "timestamp"), # Forensic search optimization
+        Index("idx_nin_timestamp", "patient_nin", "timestamp"), 
     )
+
+class ClinicalLedger(Base):
+    """
+    🧠 The AI Cortex: Semantic storage for medical narratives.
+    Enables RAG (Retrieval-Augmented Generation) for clinical support.
+    """
+    __tablename__ = "clinical_ledger"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    record_id: Mapped[int] = mapped_column(ForeignKey("medical_records.id"), nullable=False)
+    
+    # Raw narrative content
+    note_content: Mapped[str] = mapped_column(Text, nullable=False)
+    
+    # 🧬 Vector Embedding: 1536 dimensions for AI semantic search
+    embedding: Mapped[Optional[Any]] = mapped_column(Vector(1536))
+    
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now())
+
+    # Relationship back to the primary clinical record
+    medical_record: Mapped["MedicalRecord"] = relationship(back_populates="ledger_entries")
 
 class AuditLog(Base):
     """Forensic Trail: Mandatory for NDPA 2023 Compliance."""

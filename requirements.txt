@@ -2,24 +2,36 @@
 fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 python-dotenv
+pydantic-settings>=2.1.0
 
-# --- Database & Persistence ---
+# --- Database & Persistence (The Registry) ---
 sqlalchemy>=2.0.0
 psycopg2-binary
+pgvector
+alembic>=1.15.0
 
-# --- Security & Authentication (NDPA 2023 Compliant) ---
+# --- Security & Identity (NDPA 2023 Compliant) ---
 python-multipart
 python-jose[cryptography]
-passlib[bcrypt]  # Added [bcrypt] to handle password hashing legally
+passlib[bcrypt]
 
-# --- Data Validation (The "email-validator" Fix) ---
+# --- Data Validation ---
 pydantic[email]>=2.0.0
 email-validator>=2.0.0
 
-# --- Communication & Testing (Flutterwave & Audits) ---
+# --- AI & Research Engine (The 'Judge' and 'Bailiff') ---
+openai
+langchain-core
+langchain-openai
+langchain-community
+langchain-tavily
+tavily-python
+
+# --- Communication & Fiscal Gateway ---
 requests
-httpx  # Required for FastAPI's TestClient and modern async webhooks
-pytest
-pydantic-settings>=2.1.0
+httpx
 qrcode[pil]==8.0.0
-alembic>=1.15.0
+
+# --- Document Generation & Audits ---
+reportlab
+pytest

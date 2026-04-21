@@ -1,7 +1,7 @@
 services:
   # The Database Registry (The Hospital's Archive)
   db:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     container_name: mims_db_prod
     restart: always
     ports:
